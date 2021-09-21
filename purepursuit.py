@@ -1,8 +1,10 @@
+import sys
 import json
+import time
+
 import matplotlib
 from matplotlib import pyplot as plt
 import numpy as np
-import time
 
 class Bicycle_model:
     def __init__(self, look_ahead, speed):
@@ -47,25 +49,29 @@ class PurePursuit:
     """
     def __init__(self, look_ahead, dt = 0.1, speed = 10):
         plt.ion()   #Magic method for everythong to work...
-        #Time between cycles
-        self.dt = dt
-        #Parameters used for plotting
-        self.fig, self.ax = plt.subplots()
-        self.line, = self.ax.plot([], [], lw=2)
-        plt.title('Pure Pursuit')
 
         with open('path.json', 'r') as f:
             self.path = json.load(f)        #Saving path points
-        f.close()
-
         #Coordinates for plotting the map
         self.graph_path = ([], [])
         for coordinate in self.path:
             self.graph_path[0].append(coordinate[0])
             self.graph_path[1].append(coordinate[1])
 
+        xrange = 0.1*np.array([min(self.graph_path[0]), max(self.graph_path[0])])
+        yrange = 0.1*np.array([min(self.graph_path[1]), max(self.graph_path[1])])
+
+        figsize = (xrange[1]-xrange[0], yrange[1]-yrange[0])
+        #Parameters used for plotting
+        self.fig, self.ax = plt.subplots(figsize=figsize)
+        self.line, = self.ax.plot([], [], lw=2)
+        self.ax.set_xlim([0, 30])
+        plt.title('Pure Pursuit')
         #Used for checking if new index is out of bounds
         self.max_index = len(self.path) - 1
+
+        #Time between cycles
+        self.dt = dt
 
         self.bicycle = Bicycle_model(look_ahead, speed)  #starting bicycle instance
 
@@ -96,7 +102,6 @@ class PurePursuit:
         plt.plot(self.bicycle.path_taken[0], self.bicycle.path_taken[1], 'm')
         #Plot current position
         plt.plot(self.bicycle.state[0], self.bicycle.state[1], 'bo')
-
         self.fig.canvas.flush_events()
 
     def get_lookahead_point_index(self, last_index):
@@ -137,4 +142,8 @@ def main():
     pp.run_sim()
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('Simulation exited')
+        sys.exit(0)
